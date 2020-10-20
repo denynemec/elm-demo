@@ -54,5 +54,5 @@ Mostly trade-offs for bunch of advanteges:
 - [Elm guide](https://guide.elm-lang.org/)
 - [Ellie](https://ellie-app.com/new)
 - [Elm packages](https://package.elm-lang.org/)
-- [Elm awesome list](https://www.youtube.com/watch?v=IcgmSRJHu_8&ab_channel=elm-conf)
+- [Elm awesome list](https://github.com/sporto/awesome-elm)
 - [Make impossible states impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8&ab_channel=elm-conf)

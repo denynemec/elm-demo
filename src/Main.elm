@@ -19,12 +19,26 @@ import RemoteData
 
 
 type alias Model =
-    Int
+    { counterValue : Int
+    , todosResponse : RemoteData.WebData (List TodoItem)
+    }
+
+
+type alias TodosResponse =
+    RemoteData.WebData (List TodoItem)
+
+
+type alias TodoItem =
+    { id : Int
+    , title : String
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( 0
+    ( { counterValue = 0
+      , todosResponse = RemoteData.NotAsked
+      }
     , Cmd.none
     )
 
@@ -35,15 +49,59 @@ init =
 
 type Msg
     = Increment
+    | Decrement
+    | ClickedFetchTodos
+    | FetchedTodos TodosResponse
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Increment ->
-            ( model + 1
+            ( { model | counterValue = model.counterValue + 1 }
             , Cmd.none
             )
+
+        Decrement ->
+            ( { model | counterValue = model.counterValue - 1 }
+            , Cmd.none
+            )
+
+        ClickedFetchTodos ->
+            ( { model | todosResponse = RemoteData.Loading }
+            , fetchTodosCmd
+            )
+
+        FetchedTodos todosResponse ->
+            ( { model | todosResponse = todosResponse }
+            , Cmd.none
+            )
+
+
+fetchTodosCmd : Cmd Msg
+fetchTodosCmd =
+    { method = "GET"
+    , headers = []
+    , url = "https://jsonplaceholder.typicode.com/todos"
+    , body = Http.emptyBody
+
+    -- We always need to specify type. Elm need to know, what response we expect (JSON, string, bytes...) and need to know, what to do with it
+    -- In this case, we expect JSON
+    -- (RemoteData.fromResult >> FetchedTodos) - it will transform it - about it later
+    -- ((Decode.list decodeTodoItem)) - decoder - "how to parse JSON into out data structure in Elm"
+    , expect = Http.expectJson (RemoteData.fromResult >> FetchedTodos) (Decode.list decodeTodoItem)
+    , timeout = Nothing
+    , tracker = Nothing
+    }
+        |> Http.request
+
+
+decodeTodoItem : Decode.Decoder TodoItem
+decodeTodoItem =
+    -- Pipeline.required needs to be in same order as properties in TodoItem recird type alias signature (id, title, ...)
+    Decode.succeed TodoItem
+        |> Pipeline.required "id" Decode.int
+        |> Pipeline.required "title" Decode.string
 
 
 
@@ -54,7 +112,7 @@ view : Model -> Html Msg
 view model =
     let
         counterValueString =
-            String.fromInt model
+            String.fromInt model.counterValue
     in
     Html.div centeredColumnAttributes
         [ Html.h1 [] [ Html.text "Example Elm app!" ]
@@ -66,7 +124,52 @@ view model =
                 [ Html.text "Increment!" ]
             ]
         , Html.text <| "Current value: " ++ counterValueString
+        , Html.button
+            [ Events.onClick Decrement
+            , Attributes.style "width" "100px"
+            ]
+            [ Html.text "Decrement!" ]
+        , Html.div [ Attributes.style "padding-top" "20px" ]
+            [ Html.button
+                [ Events.onClick ClickedFetchTodos
+                , Attributes.style "width" "100px"
+                ]
+                [ Html.text "Fetch todos!" ]
+            ]
+        , todosResponseView model.todosResponse
         ]
+
+
+todosResponseView : TodosResponse -> Html Msg
+todosResponseView todosResponse =
+    case todosResponse of
+        RemoteData.NotAsked ->
+            Html.text "Not asked..."
+
+        RemoteData.Loading ->
+            Html.text "Loading..."
+
+        -- In this example, we ignore error (_) - we just display "Error!" text, but in Failure payload, we have access to whole error and we han show specific text for different error types - based on status code, decoder error (we expect different data), etc.
+        RemoteData.Failure _ ->
+            Html.text "Error!"
+
+        RemoteData.Success todos ->
+            Html.div centeredColumnAttributes <|
+                List.map todoView todos
+
+
+todoView : TodoItem -> Html Msg
+todoView todoItem =
+    let
+        formattedTodoItemText =
+            formatTodoItemText todoItem
+    in
+    Html.div [] [ Html.text formattedTodoItemText ]
+
+
+formatTodoItemText : TodoItem -> String
+formatTodoItemText todoItem =
+    String.fromInt todoItem.id ++ " - " ++ todoItem.title
 
 
 

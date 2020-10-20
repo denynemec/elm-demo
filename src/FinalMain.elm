@@ -1,4 +1,4 @@
-module FinalMain exposing (..)
+module FinalMain exposing (main)
 
 import Browser
 import Html exposing (Attribute, Html)
