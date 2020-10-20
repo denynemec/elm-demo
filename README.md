@@ -11,13 +11,14 @@ At first view, Elm syntax is weird. Everything is function (pure function withou
 - Each function (by design) returns something (if you need use local variables in functions/if-else statements/etc., you can use let-in block)
 - No undefined, no null, Elm has its own safe types. For undefined/null/empty type, we have something called `Maybe`
 - Each variable is by design immutable
-- Absolute modules (no relative imports)
+- Absolute module path (no relative imports)
 - Pseudo-html syntax (similar concept as React and JSX) - everything in single module
 - Model - View - Update - Redux idea - to connect new pages, it is neccesary to do some boilerplate for it, but it has a lot of benefits
 - Almost every time, I'm starting with types structure. Then I'm using compiler to `make it works`
 - When Elm app compiles, it will won't crash in runtime! It's very easy to used on it :-D
 - Elm has quite small bunch of options in syntax, but it is very powerfull - basically, when you understand basics, you are able to to quite a lot of stuffs!
-- elm-format, elm-analyse
+- elm-format, elm-analyse - tools
+- Elm has it's own dependency list - elm.json file
 
 ## Types
 
