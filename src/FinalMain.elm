@@ -155,7 +155,16 @@ todosResponseView todosResponse =
 
 todoView : TodoItem -> Html Msg
 todoView todoItem =
-    Html.div [] [ Html.text (String.fromInt todoItem.id ++ " - " ++ todoItem.title) ]
+    let
+        formattedTodoItemText =
+            formatTodoItemText todoItem
+    in
+    Html.div [] [ Html.text formattedTodoItemText ]
+
+
+formatTodoItemText : TodoItem -> String
+formatTodoItemText todoItem =
+    String.fromInt todoItem.id ++ " - " ++ todoItem.title
 
 
 centeredColumnAttributes : List (Attribute Msg)
