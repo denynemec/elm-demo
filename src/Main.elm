@@ -13,7 +13,7 @@ import RemoteData
 
 -- TODO:
 -- Add Decrement
--- Add Reset
+-- Add ClickedFetchTodos
 -- Add fetch "https://jsonplaceholder.typicode.com/todos"
 ---- MODEL ----
 
