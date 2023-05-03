@@ -3,7 +3,6 @@ module Main exposing (..)
 import Browser
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attributes
-import Html.Events as Events
 
 
 
@@ -11,59 +10,51 @@ import Html.Events as Events
 -- import Json.Decode as Decode
 -- import Json.Decode.Pipeline as Pipeline
 -- import RemoteData
+-- ------------------------------------------
+-- ------------------------------------------
+-- ------------------------------------------
+-- TO PRESENT
+-- List.map … |> List.map … |> List.filter …
+-- When to use NoOp MSG?
+-- Type ()
+-- Never type?
+-- The Never type is a type that doesn't have any values.
+-- It's a type that can be specified in a type annotation, but you can't construct a Never value because it is valueless.
+-- identity & always
+-- ELM debugger
+-- ------------------------------------------
+-- ------------------------------------------
+-- ------------------------------------------
 -- TODO:
--- Increment logic
--- Add Decrement
 -- Add ClickedFetchTodos
 -- Add fetch "https://jsonplaceholder.typicode.com/todos"
----- MODEL ----
 
 
 type alias Model =
-    Int
+    ()
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( 0
+init : flags -> ( Model, Cmd Msg )
+init _ =
+    ( ()
     , Cmd.none
     )
 
 
-
----- UPDATE ----
-
-
 type Msg
-    = Increment
+    = NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        Increment ->
-            ( model
-            , Cmd.none
-            )
-
-
-
----- VIEW ----
+update NoOp model =
+    ( model
+    , Cmd.none
+    )
 
 
 view : Model -> Html Msg
 view model =
-    Html.div centeredColumnAttributes
-        [ Html.h1 [] [ Html.text "Example Elm app!" ]
-        , Html.div [ Attributes.style "padding-top" "20px" ]
-            [ Html.button
-                [ Events.onClick Increment
-                , Attributes.style "width" "100px"
-                ]
-                [ Html.text "Increment!" ]
-            ]
-        , Html.text <| "Current value: " ++ String.fromInt model
-        ]
+    Html.div centeredColumnAttributes [ Html.h1 [] [ Html.text "Example Elm app!" ] ]
 
 
 
@@ -98,15 +89,11 @@ centeredColumnAttributes =
     ]
 
 
-
----- PROGRAM ----
-
-
 main : Program () Model Msg
 main =
     Browser.element
         { view = view
-        , init = \_ -> init
+        , init = init
         , update = update
         , subscriptions = always Sub.none
         }
