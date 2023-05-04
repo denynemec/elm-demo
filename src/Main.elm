@@ -3,78 +3,136 @@ module Main exposing (..)
 import Browser
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attributes
-
-
-
--- import Http
--- import Json.Decode as Decode
--- import Json.Decode.Pipeline as Pipeline
--- import RemoteData
--- ------------------------------------------
--- ------------------------------------------
--- ------------------------------------------
--- TO PRESENT
--- List.map … |> List.map … |> List.filter …
--- When to use NoOp MSG?
--- Type ()
--- Never type?
--- The Never type is a type that doesn't have any values.
--- It's a type that can be specified in a type annotation, but you can't construct a Never value because it is valueless.
--- identity & always
--- ELM debugger
--- ------------------------------------------
--- ------------------------------------------
--- ------------------------------------------
--- TODO:
--- Add ClickedFetchTodos
--- Add fetch "https://jsonplaceholder.typicode.com/todos"
+import Html.Events as Events
+import Http
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Pipeline
 
 
 type alias Model =
-    ()
+    { response : RemoteDataRefetching }
 
 
 init : flags -> ( Model, Cmd Msg )
 init _ =
-    ( ()
-    , Cmd.none
+    ( { response = Loading }
+    , fetchTodoItems []
     )
+
+
+type RemoteDataRefetching
+    = NotAsked
+    | Loading
+    | Failure Http.Error
+    | Success TodoList
+    | Refetching TodoList
+
+
+type alias TodoList =
+    List TodoItem
+
+
+type alias TodoItem =
+    { todoLabel : String
+    , id : Int
+    }
 
 
 type Msg
-    = NoOp
+    = ClickedRefetchTodos TodoList
+    | GotTodoList TodoList RemoteDataRefetching
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update NoOp model =
-    ( model
-    , Cmd.none
-    )
+update msg model =
+    case msg of
+        ClickedRefetchTodos todoList ->
+            ( { model
+                | response = Refetching todoList
+              }
+            , fetchTodoItems todoList
+            )
+
+        GotTodoList todoList response ->
+            ( { model
+                | response = response
+              }
+            , Cmd.none
+            )
+
+
+fetchTodoItems : TodoList -> Cmd Msg
+fetchTodoItems todoList =
+    Http.get
+        { url = "https://jsonplaceholder.typicode.com/todos"
+        , expect = Http.expectJson (fromResultToRemoteDataRefetching >> GotTodoList todoList) decodeTodoList
+        }
+
+
+fromResultToRemoteDataRefetching : Result Http.Error TodoList -> RemoteDataRefetching
+fromResultToRemoteDataRefetching result =
+    case result of
+        Ok data ->
+            Success data
+
+        Err error ->
+            Failure error
+
+
+decodeTodoList : Decode.Decoder TodoList
+decodeTodoList =
+    Decode.list decodeTodoItem
+
+
+decodeTodoItem : Decode.Decoder TodoItem
+decodeTodoItem =
+    Decode.succeed TodoItem
+        |> Pipeline.required "title" Decode.string
+        |> Pipeline.required "id" Decode.int
 
 
 view : Model -> Html Msg
 view model =
-    Html.div centeredColumnAttributes [ Html.h1 [] [ Html.text "Example Elm app!" ] ]
+    Html.div centeredColumnAttributes
+        [ todoListResponseView model.response
+        ]
 
 
+todoListResponseView : RemoteDataRefetching -> Html Msg
+todoListResponseView response =
+    case response of
+        NotAsked ->
+            Html.text "Klikni na cudlik"
 
--- todoView : TodoItem -> Html Msg
+        Loading ->
+            Html.text "Loading ..."
+
+        Success todoList ->
+            List.map todoItemView todoList
+                |> (::) (Html.button [ Events.onClick <| ClickedRefetchTodos todoList ] [ Html.text "Fetch todo items" ])
+                |> Html.div []
+
+        Refetching todoList ->
+            List.map todoItemView todoList
+                |> (::) (Html.text "Loading ...")
+                |> Html.div []
+
+        Failure _ ->
+            Html.text "Error"
 
 
-todoView todoItem =
+todoItemView : TodoItem -> Html Msg
+todoItemView todoItem_ =
     let
         formattedTodoItemText =
-            formatTodoItemText todoItem
+            formatTodoItemText todoItem_
     in
     Html.div [] [ Html.text formattedTodoItemText ]
 
 
-
--- formatTodoItemText : TodoItem -> String
-
-
+formatTodoItemText : TodoItem -> String
 formatTodoItemText todoItem =
-    String.fromInt todoItem.id ++ " - " ++ todoItem.title
+    String.fromInt todoItem.id ++ " - " ++ todoItem.todoLabel
 
 
 
